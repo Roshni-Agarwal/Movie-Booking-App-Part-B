@@ -11,29 +11,24 @@
 #image{
     background-color: #ff7f7f;
     height: 35px;
-    width: 50px;
-    animation: tt;
-    animation-duration: 8s;
-    position: relative;
-      animation-iteration-count: infinite;
-      animation-timing-function: linear; 
+    animation: image-spin infinite 8s linear;
 
     top: 0;
     left: 0;
     
 }
+.login-button {
+  float: right;
+}
+
+.booknow-button {
+  float: right;
+  margin-right: 20px;
+}
   
   
-  @keyframes tt {
-    0% {
-      transform: linear;
-      left: 0px;
-    }
-  
-    100% {
-      transform: linear;
-      left: 100%;
-    }
+  @keyframes image-spin{
+    from { transform: scaleX(-1); }
   }
 
   
