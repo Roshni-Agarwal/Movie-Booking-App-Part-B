@@ -46,10 +46,11 @@ class Details extends Component {
     componentWillMount() {
         let currentState = this.state;
         currentState.movie = moviesData.filter((mov) => {
-            return mov.id === this.props.match.params.id
+            return (mov.title) === this.props.match.params.id
         })[0];
 
         this.setState({ currentState });
+        console.log(""+this.props.match.params.id)
     }
 
     artistClickHandler = (url) => {

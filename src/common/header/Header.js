@@ -57,7 +57,9 @@ class Header extends Component {
       contactRequired: "dispNone",
       contact: "",
       login:"dispNone",
-      isLoggedin: "false",
+      isLoggedin: false,
+      registrationSuccess: false,
+      loggedIn: sessionStorage.getItem("access-token") == null ? false : true,
     };
   }
   openModalHandler = () => {
@@ -86,16 +88,37 @@ class Header extends Component {
   tabChangeHandler = (event, value) => {
     this.setState({ value });
   };
-  loginClickHandler = () => {
+  loginClickHandler = async () => {
     this.state.username === ""
       ? this.setState({ usernameRequired: "dispBlock" })
       : this.setState({ usernameRequired: "dispNone" });
     this.state.loginPassword === ""
       ? this.setState({ loginPasswordRequired: "dispBlock" })
       : this.setState({ loginPasswordRequired: "dispNone" });
-  
-    };
+    let that = this;
 
+      const requestOptions = {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa(this.state.username + ':' + this.state.loginPassword)
+       },
+    };
+    let resp = await fetch('http://localhost:8085/api/v1/auth/login/', requestOptions)
+let data =  await resp.json();
+console.log(data);
+             if (data && data.status == "ACTIVE") {
+            //this.setState.isLoggedin = true;
+            //this.setState.modalIsOpen = false;
+            this.setState({ isLoggedin: true });
+            this.setState({ modalIsOpen: false });
+          }    
+    // .then(response => response.json())
+        // .then(function(data) {
+        //   console.log(that);
+ 
+        // });
+    };
   inputUsernameChangeHandler = (e) => {
     this.setState({ username: e.target.value });
   };
@@ -120,7 +143,26 @@ class Header extends Component {
       : this.setState({ contactRequired: "dispNone" });
       (this.state.firstname !== ""&&this.state.lastname !== ""&&this.state.email !== ""&&this.state.registerPassword !== ""&& this.state.contact !== "")?this.setState({login:"dispBlock"}):(this.setState({login:"dispNone"}));
     
-   
+    
+    // payload
+
+    const registerPayload = {
+      "email_address": this.state.email,
+      "first_name": this.state.firstname,
+      "last_name": this.state.lastname,
+      "mobile_number": this.state.contact,
+      "password": this.state.registerPassword
+    }
+
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(registerPayload)
+  };
+  fetch('http://localhost:8085/api/v1/signup/', requestOptions)
+      .then(response => response.json())
+      .then(data => this.setState(console.log(data)));
+
 
     };
   inputFirstNameChangeHandler = (e) => {
@@ -138,6 +180,14 @@ class Header extends Component {
   inputContactChangeHandler = (e) => {
     this.setState({ contact: e.target.value });
   }; 
+  logoutHandler = (e) => {
+    sessionStorage.removeItem("uuid");
+    sessionStorage.removeItem("access-token");
+
+    this.setState({
+      loggedIn: false,
+    });
+  };
 
   render() {
     console.log(this.props);
@@ -145,6 +195,7 @@ class Header extends Component {
       <div>
         <header className="header">
           <img src={MovieLogo} alt="logo" id="image" />
+          {!this.state.loggedIn ? (
           <div className="login-button">
             <Button
               variant="contained"
@@ -154,7 +205,18 @@ class Header extends Component {
               Login
             </Button>
           </div>
-          {this.props.showBookShowButton && this.props.isLoggedin ? (
+          ):(
+            <div className="login-button">
+              <Button
+                variant="contained"
+                color="default"
+                onClick={this.logoutHandler}
+              >
+                Logout
+              </Button>
+            </div>
+          )}
+          {this.props.showBookShowButton && this.state.isLoggedin ? (
             <div className="booknow-button">
               <Link to={"/bookshow/" + this.props.id} style={{ textDecoration: 'none' }}>
                 <Button variant="contained" color="primary" >
@@ -216,6 +278,13 @@ class Header extends Component {
                   <span className="red">required</span>
                 </FormHelperText>
               </FormControl>
+              <br />
+              <br />
+              {this.state.loggedIn === true && (
+                <FormControl>
+                  <span className="successText">Login Successful!</span>
+                </FormControl>
+              )}
               <br />
               <br />
               <Button

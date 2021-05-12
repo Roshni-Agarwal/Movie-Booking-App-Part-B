@@ -58,9 +58,63 @@ class Home extends Component {
       movieName: "",
       genres: [],
       artists: [],
+      upcomingMovies: [],
+      releasedMovies: [],
+      genresList: [],
+      artistsList: [],
+      releaseDateStart: "",
+      releaseDateEnd: "",
     };
   }
+  componentWillMount() {
+    // Get upcoming movies
 
+    fetch(
+      "http://localhost:8085/api/v1/movies?page=1&limit=10&status=published",
+      { method: "GET" }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        this.setState({
+          upcomingMovies: data.movies,
+        });
+      });
+
+    // Get released movies
+
+    fetch(
+      "http://localhost:8085/api/v1/movies?page=1&limit=10&status=Released",
+      { method: "GET" }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        this.setState({
+          releasedMovies: data.movies,
+        });
+      });
+
+    // Get filters
+
+    fetch("http://localhost:8085/api/v1/genres", { method: "GET" })
+      .then((response) => response.json())
+      .then((data) => {
+        this.setState({
+          genresList: data.genres,
+        });
+      });
+
+    // Get artists
+
+    fetch("http://localhost:8085/api/v1/artists?page=1&limit=10", {
+      method: "GET",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        this.setState({
+          artistsList: data.artists,
+        });
+      });
+  }
   movieNameChangeHandler = (event) => {
     this.setState({ movieName: event.target.value });
   };
@@ -75,6 +129,37 @@ class Home extends Component {
 
   movieClickHandler = (movieId) => {
     this.props.history.push("/movie/" + movieId);
+  };
+
+  filterApplyHandler = () => {
+    let queryString = "&status=Released";
+    if (this.state.movieName !== "") {
+      queryString += "&title=" + this.state.movieName;
+    }
+    if (this.state.genres.length > 0) {
+      queryString += "&genres=" + this.state.genres.toString();
+    }
+    if (this.state.artists.length > 0) {
+      queryString += "&artists=" + this.state.artists.toString();
+    }
+    if (this.state.releaseDateStart !== "") {
+      queryString += "&start_date=" + this.state.releaseDateStart;
+    }
+    if (this.state.releaseDateEnd !== "") {
+      queryString += "&end_date=" + this.state.releaseDateEnd;
+    }
+
+    fetch( "http://localhost:8085/api/v1/movies?page=1&limit=10" +
+    encodeURI(queryString), {
+      method: "GET",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        this.setState({
+            releasedMovies: data.movies,
+        });
+      });
+  
   };
 
   render() {
@@ -92,15 +177,15 @@ class Home extends Component {
     }
     return (
       <div>
-        <Header />
+        <Header  baseUrl={this.props.baseUrl} />
 
         <div className={classes.upcomingMoviesHeading}>
           <span>Upcoming Movies</span>
         </div>
 
         <GridList cols={5} className={classes.gridListUpcomingMovies}>
-          {moviesData.map((movie) => (
-            <GridListTile key={movie.id}>
+          {this.state.upcomingMovies.map((movie) => (
+            <GridListTile key={"upcoming" + movie.id}>
               <img
                 src={movie.poster_url}
                 className="movie-poster"
@@ -118,9 +203,9 @@ class Home extends Component {
               cols={4}
               className={classes.gridListMain}
             >
-              {filterMovie.map((movie) => (
+              {this.state.releasedMovies.map((movie) => (
                 <GridListTile
-                  onClick={() => this.movieClickHandler(movie.id)}
+                  onClick={() => this.movieClickHandler(movie.title)}
                   className="released-movie-grid-item"
                   key={"grid" + movie.id}
                 >
@@ -170,12 +255,12 @@ class Home extends Component {
                     value={this.state.genres}
                     onChange={this.genreSelectHandler}
                   >
-                    {genres.map((genre) => (
-                      <MenuItem key={genre.id} value={genre.name}>
+                    {this.state.genresList.map((genre) => (
+                      <MenuItem key={genre.id} value={genre.genre}>
                         <Checkbox
-                          checked={this.state.genres.indexOf(genre.name) > -1}
+                          checked={this.state.genres.indexOf(genre.genre) > -1}
                         />
-                        <ListItemText primary={genre.name} />
+                        <ListItemText primary={genre.genre} />
                       </MenuItem>
                     ))}
                   </Select>
@@ -192,7 +277,7 @@ class Home extends Component {
                     value={this.state.artists}
                     onChange={this.artistSelectHandler}
                   >
-                    {artists.map((artist) => (
+                    {this.state.artistsList.map((artist) => (
                       <MenuItem
                         key={artist.id}
                         value={artist.first_name + " " + artist.last_name}
@@ -219,6 +304,7 @@ class Home extends Component {
                     type="date"
                     defaultValue=""
                     InputLabelProps={{ shrink: true }}
+                    onChange={this.releaseDateStartHandler}
                   />
                 </FormControl>
 
@@ -229,12 +315,13 @@ class Home extends Component {
                     type="date"
                     defaultValue=""
                     InputLabelProps={{ shrink: true }}
+                    onChange={this.releaseDateEndHandler}
                   />
                 </FormControl>
                 <br />
                 <br />
                 <FormControl className={classes.formControl}>
-                  <Button variant="contained" color="primary">
+                  <Button onClick={() => this.filterApplyHandler()} variant="contained" color="primary">
                     APPLY
                   </Button>
                 </FormControl>
