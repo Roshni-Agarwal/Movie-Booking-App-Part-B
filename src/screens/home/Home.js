@@ -51,6 +51,7 @@ const styles = (theme) => ({
   },
 });
 
+//changing to function component
 class Home extends Component {
   constructor() {
     super();

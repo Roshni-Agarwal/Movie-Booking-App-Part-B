@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect,useState } from 'react';
 import Header from '../../common/header/Header';
 import moviesData from '../../assets/moviesData';
 import Typography from '@material-ui/core/Typography';
@@ -10,10 +10,12 @@ import GridListTileBar from '@material-ui/core/GridListTileBar';
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import { Link } from 'react-router-dom';
 
-class Details extends Component {
-    constructor() {
+//changing to function component
+const Details=(props)=>{
+    /*constructor() {
         super();
-        this.state = {
+        this.state*/
+        const[state,setState]= useState({
             movie: {},
             starIcons: [{
                 id: 1,
@@ -41,25 +43,27 @@ class Details extends Component {
                 color: "black"
             }]
         }
-    }
+    ,[]);
 
-    componentWillMount() {
-        let currentState = this.state;
+  const componentWillMount=()=> {
+      useEffect(()=>{
+        let currentState = state;
         currentState.movie = moviesData.filter((mov) => {
-            return (mov.title) === this.props.match.params.id
+            return (mov.title) === props.match.params.id
         })[0];
 
         this.setState({ currentState });
-        console.log(""+this.props.match.params.id)
+        console.log(""+props.match.params.id)
+    },[])
     }
 
-    artistClickHandler = (url) => {
+   const artistClickHandler = (url) => {
         window.location = url;
     }
 
-    starClickHandler = (id) => {
+   const starClickHandler = (id) => {
         let starIconList = [];
-        for (let star of this.state.starIcons) {
+        for (let star of state.starIcons) {
             let starNode = star;
             if (star.id <= id) {
                 starNode.color = "yellow"
@@ -70,11 +74,11 @@ class Details extends Component {
             }
             starIconList.push(starNode);
         }
-        this.setState({ starIcons: starIconList });
+        setState({ starIcons: starIconList });
     }
 
-    render() {
-        let movie = this.state.movie;
+    //render() {
+        let movie = state.movie;
         const opts = {
             height: '300',
             width: '700',
@@ -84,7 +88,7 @@ class Details extends Component {
         }
         return (
             <div className="details">
-              <Header id={this.props.match.params.id} showBookShowButton="true" />
+              <Header id={props.match.params.id} showBookShowButton="true" />
                 <div className="back">
                     <Typography>
                         <Link to="/">  &#60; Back to Home</Link>
@@ -124,7 +128,7 @@ class Details extends Component {
                             <YouTube
                                 videoId={movie.trailer_url.split("?v=")[1]}
                                 opts={opts}
-                                onReady={this._onReady}
+                                onReady={props._onReady}
                             />
                         </div>
                     </div>
@@ -137,7 +141,7 @@ class Details extends Component {
                             <StarBorderIcon
                                 className={star.color}
                                 key={"star" + star.id}
-                                onClick={() => this.starClickHandler(star.id)}
+                                onClick={() => starClickHandler(star.id)}
                             />
                         ))}
 
@@ -166,6 +170,6 @@ class Details extends Component {
             </div>
         )
     }
-}
+//}
 
 export default Details;
